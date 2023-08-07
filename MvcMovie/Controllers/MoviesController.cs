@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MvcMovie.Data;
 using MvcMovie.Models;
 
@@ -20,11 +23,63 @@ namespace MvcMovie.Controllers
         }
 
         // GET: Movies
-        public async Task<IActionResult> Index()
+        // using id as the parameter matches the optional placeholder for default routes
+        // GET: Movies
+        public async Task<IActionResult> Index(decimal? price, DateTime releaseDate, string? movieGenre, string? searchString)
         {
-              return _context.Movie != null ? 
-                          View(await _context.Movie.ToListAsync()) :
-                          Problem("Entity set 'MvcMovieContext.Movie'  is null.");
+
+            releaseDate = releaseDate.Date;
+            if (_context.Movie == null)
+            {
+                return Problem("Entity set 'MvcMovieContext.Movie'  is null.");
+            }
+            
+            //LINQ query to get list of prices
+            IQueryable<decimal?> priceQuery = from m in _context.Movie
+                                             orderby m.Price
+                                             select m.Price;
+
+            //LINQ query to get list of releaseDates
+            IQueryable<DateTime?> dateQuery = from m in _context.Movie
+                                             orderby m.ReleaseDate
+                                             select m.ReleaseDate;
+            
+            //LINQ to get list of genres.
+            IQueryable<string?> genreQuery = from m in _context.Movie
+                                            orderby m.Genre
+                                            select m.Genre;
+            
+            //LINQ query to get list of movies.
+            var movies = from m in _context.Movie
+                         select m;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                movies = movies.Where(s => s.Title!.Contains(searchString));
+            }
+
+            if (!string.IsNullOrEmpty(movieGenre))
+            {
+                movies = movies.Where(x => x.Genre == movieGenre);
+            }
+
+            if (releaseDate != DateTime.MinValue)
+            {
+                movies = movies.Where(x => x.ReleaseDate == releaseDate);
+            }
+            if (!price.Equals(null))
+            {
+                movies = movies.Where(x => x.Price == price);
+            }
+            var movieGenreVM = new MovieSearchViewModel
+            {
+                Prices = new SelectList(await priceQuery.Distinct().ToListAsync()),
+                //ReleaseDates = new SelectList(await dateQuery.Distinct().ToListAsync()),
+                //Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
+                Movies = await movies.ToListAsync()
+            };
+
+            return View(movieGenreVM);
         }
 
         // GET: Movies/Details/5
