@@ -8,6 +8,10 @@
 <!-- Search Form *Provides the functionality to search any of the fields available-->
 <form asp-controller="Movies" asp-action="Index" method="get">
     <p>
+        <!-- search by rating-->
+        <select asp-for="MovieRating" asp-items="Model.Ratings">
+            <option value="">All</option>
+        </select>
         <!-- search by price-->
         <select asp-for="MoviePrice" asp-items="Model.Prices">
             <option value="">All</option>
@@ -48,6 +52,10 @@
             <th>
                 @Html.DisplayNameFor(model => model.Movies![0].Price)
             </th>
+            <!-- Added Rating to view template to display, create, and edit Rating in browser-->
+            <th>
+                @Html.DisplayNameFor(model => model.Movies![0].Rating)
+            </th>
             <th></th>
         </tr>
     </thead>
@@ -65,6 +73,10 @@
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Price)
+            </td>
+            <!-- Added Rating to view template to display, create, and edit Rating in browser-->
+            <td>
+                @Html.DisplayFor(modelItem => item.Rating)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

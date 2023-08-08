@@ -25,15 +25,20 @@ namespace MvcMovie.Controllers
         // GET: Movies
         // using id as the parameter matches the optional placeholder for default routes
         // GET: Movies
-        public async Task<IActionResult> Index(decimal? price, DateTime releaseDate, string? movieGenre, string? searchString)
+        public async Task<IActionResult> Index(string? searchString, string? movieGenre, DateTime movieReleaseDate, decimal? moviePrice, string? movieRating)
         {
 
-            releaseDate = releaseDate.Date;
+            
             if (_context.Movie == null)
             {
                 return Problem("Entity set 'MvcMovieContext.Movie'  is null.");
             }
             
+            //LINQ query to get list of ratings
+            IQueryable<string?> ratingQuery = from m in _context.Movie
+                                              orderby m.Rating
+                                              select m.Rating;
+
             //LINQ query to get list of prices
             IQueryable<decimal?> priceQuery = from m in _context.Movie
                                              orderby m.Price
@@ -53,29 +58,38 @@ namespace MvcMovie.Controllers
             var movies = from m in _context.Movie
                          select m;
 
+            //Query the user input agains the list of all titles
             if (!string.IsNullOrEmpty(searchString))
             {
                 movies = movies.Where(s => s.Title!.Contains(searchString));
             }
-
+            //Query user input against the list of all genres
             if (!string.IsNullOrEmpty(movieGenre))
             {
                 movies = movies.Where(x => x.Genre == movieGenre);
             }
-
-            if (releaseDate != DateTime.MinValue)
+            //Query user selection against the list of all dates
+            if (movieReleaseDate > DateTime.MinValue)
             {
-                movies = movies.Where(x => x.ReleaseDate == releaseDate);
+                movies = movies.Where(x => x.ReleaseDate.Equals(movieReleaseDate));
             }
-            if (!price.Equals(null))
+            //Query user selection against the list of all prices
+            if (moviePrice > 0)
             {
-                movies = movies.Where(x => x.Price == price);
+                movies = movies.Where(x => x.Price.Equals(moviePrice));
             }
+            //Query user selection against the list of all ratings
+            if (!string.IsNullOrEmpty(movieRating))
+            {
+                movies = movies.Where(x => x.Rating == movieRating);
+            }
+            //intialize and set the view model.
             var movieGenreVM = new MovieSearchViewModel
             {
+                Ratings = new SelectList(await ratingQuery.Distinct().ToListAsync()),
                 Prices = new SelectList(await priceQuery.Distinct().ToListAsync()),
-                //ReleaseDates = new SelectList(await dateQuery.Distinct().ToListAsync()),
-                //Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
+                ReleaseDates = new SelectList(await dateQuery.Distinct().ToListAsync()),
+                Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
                 Movies = await movies.ToListAsync()
             };
 
@@ -111,7 +125,9 @@ namespace MvcMovie.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,Genre,Price")] Movie movie)
+        
+        //Added Rating to the property [Bind]ing list 
+        public async Task<IActionResult> Create([Bind("Id,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (ModelState.IsValid)
             {
@@ -143,7 +159,9 @@ namespace MvcMovie.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price")] Movie movie)
+        
+        //Added Rating to the property [Bind]ing list(adding new field to an already set DB schema)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,ReleaseDate,Genre,Price,Rating")] Movie movie)
         {
             if (id != movie.Id)
             {
