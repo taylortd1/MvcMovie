@@ -103,7 +103,7 @@ namespace MvcMovie.Controllers
             {
                 return NotFound();
             }
-
+            //EntityFramework used to 
             var movie = await _context.Movie
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (movie == null)
