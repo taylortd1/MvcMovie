@@ -33,7 +33,7 @@ namespace MvcMovie.Controllers
             {
                 return Problem("Entity set 'MvcMovieContext.Movie'  is null.");
             }
-            
+
             //LINQ query to get list of ratings
             IQueryable<string?> ratingQuery = from m in _context.Movie
                                               orderby m.Rating
@@ -45,7 +45,8 @@ namespace MvcMovie.Controllers
                                              select m.Price;
 
             //LINQ query to get list of releaseDates
-            IQueryable<DateTime?> dateQuery = from m in _context.Movie
+            
+            IQueryable <DateTime?> dateQuery = from m in _context.Movie
                                              orderby m.ReleaseDate
                                              select m.ReleaseDate;
             
@@ -73,21 +74,10 @@ namespace MvcMovie.Controllers
             {
                 movies = movies.Where(x => x.ReleaseDate.Equals(movieReleaseDate));
             }
-            //Query user selection against the list of all prices
-            if (moviePrice > 0)
-            {
-                movies = movies.Where(x => x.Price.Equals(moviePrice));
-            }
-            //Query user selection against the list of all ratings
-            if (!string.IsNullOrEmpty(movieRating))
-            {
-                movies = movies.Where(x => x.Rating == movieRating);
-            }
             //intialize and set the view model.
             var movieGenreVM = new MovieSearchViewModel
             {
                 Ratings = new SelectList(await ratingQuery.Distinct().ToListAsync()),
-                Prices = new SelectList(await priceQuery.Distinct().ToListAsync()),
                 ReleaseDates = new SelectList(await dateQuery.Distinct().ToListAsync()),
                 Genres = new SelectList(await genreQuery.Distinct().ToListAsync()),
                 Movies = await movies.ToListAsync()

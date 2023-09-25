@@ -21,17 +21,10 @@ public class Movie
     //Validation for genre
     [RegularExpression(@"^[A-Z]+[a-zA-Z\s]*$")]
     [Required]
-    [StringLength(30)]
+    [StringLength(100)]
     public string? Genre { get; set; }
-    
-    //Validation for price
-    [Range(1,100)]
-    [DataType(DataType.Currency)]
-    public decimal? Price { get; set; }
 
-    [RegularExpression(@"^[A-Z]+[a-zA-Z0-9""'\s-]*$")]
-    [StringLength(5)]
-    [Required]
-    //Adding a new field after the DB schema is already set
     public string? Rating { get; set; }
+    
+    public decimal? Price { get; set; }
 }
